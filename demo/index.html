@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Board RE demo</title>
+  <style>
+    :root { color-scheme: dark; font-family: system-ui, sans-serif; }
+    body { margin: 0; padding: 16px; background: #312e2b; color: #e8e6e3; }
+    main { display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start; justify-content: center; }
+    #board-wrap { width: min(92vw, 640px); }
+    aside { width: 300px; max-width: 92vw; display: grid; gap: 10px; }
+    fieldset { border: 1px solid #5a5652; border-radius: 6px; padding: 8px 10px; margin: 0; }
+    legend { font-size: 12px; opacity: .7; padding: 0 4px; }
+    label { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 13px; margin: 3px 0; }
+    select, input[type=text], button { font: inherit; font-size: 13px; background: #403d39; color: inherit; border: 1px solid #5a5652; border-radius: 4px; padding: 3px 6px; }
+    button { cursor: pointer; }
+    button:hover { background: #4d4a46; }
+    #fen { width: 100%; box-sizing: border-box; }
+    #log { font: 12px/1.4 ui-monospace, monospace; height: 150px; overflow: auto; background: #262421; border-radius: 6px; padding: 6px 8px; white-space: pre-wrap; }
+    #status { font-size: 13px; min-height: 1.4em; }
+    .row { display: flex; gap: 6px; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+  <main>
+    <div id="board-wrap"><div id="board"></div></div>
+    <aside>
+      <div id="status"></div>
+      <fieldset>
+        <legend>Game</legend>
+        <div class="row">
+          <button id="new">New</button>
+          <button id="undo">Undo</button>
+          <button id="flip">Flip</button>
+        </div>
+        <label>FEN <input id="fen" type="text" /></label>
+        <button id="loadfen">Load FEN</button>
+      </fieldset>
+      <fieldset>
+        <legend>Opponent bot (random moves)</legend>
+        <label>Enabled <input id="bot" type="checkbox" checked /></label>
+        <label>Delay (ms) <input id="delay" type="text" value="1500" size="5" /></label>
+        <label>I play
+          <select id="side"><option value="w">White</option><option value="b">Black</option><option value="both">Both (hot-seat)</option></select>
+        </label>
+      </fieldset>
+      <fieldset>
+        <legend>Board options</legend>
+        <label>Animation
+          <select id="anim"><option>default</option><option>fast</option><option>slow</option><option>none</option><option>dynamic</option><option>natural</option><option>arcade</option></select>
+        </label>
+        <label>Move method
+          <select id="method"><option>drag</option><option>click</option><option>drag_only</option></select>
+        </label>
+        <label>Coordinates
+          <select id="coords"><option>inside</option><option>outside</option><option>each_square</option><option>off</option></select>
+        </label>
+        <label>Theme <select id="theme"></select></label>
+        <label>Pieces
+          <select id="pieces"><option value="staunty">staunty (SVG)</option><option value="loco">loco (SVG)</option><option value="glyph">Unicode glyphs</option></select>
+        </label>
+        <label>Auto-promote to queen <input id="autopromote" type="checkbox" /></label>
+        <label>Premoves <input id="premoves" type="checkbox" checked /></label>
+        <label>Sounds <input id="sounds" type="checkbox" checked /></label>
+      </fieldset>
+      <div id="log"></div>
+    </aside>
+  </main>
+  <script type="module" src="./main.ts"></script>
+</body>
+</html>
