@@ -37,19 +37,20 @@ type Pt = [number, number];
 
 const clamp01 = (v: number): number => Math.max(0, Math.min(1, v));
 
-const geom = () => {
+/** `scale`: relative thickness (1 = the original's arrow); the head grows with the shaft. */
+const geom = (scale = 1) => {
   const board = SQUARE * 8;
   return {
-    halfBody: (board * SHAPE.width * 0.01) / 2,
-    headH: board * SHAPE.headHeight * 0.01,
-    headHalf: (board * SHAPE.headWidth * 0.01) / 2,
+    halfBody: (board * SHAPE.width * 0.01 * scale) / 2,
+    headH: board * SHAPE.headHeight * 0.01 * scale,
+    headHalf: (board * SHAPE.headWidth * 0.01 * scale) / 2,
     tail: board * SHAPE.tailPadding * 0.01,
   };
 };
 
 /** Straight arrow; `progress` 0..1 grows the shaft (1 = full length). */
-export function straightPolygon(length: number, progress = 1): Pt[] {
-  const { halfBody, headH, headHalf, tail } = geom();
+export function straightPolygon(length: number, progress = 1, scale = 1): Pt[] {
+  const { halfBody, headH, headHalf, tail } = geom(scale);
   const shaft = length - headH - tail;
   const shaftEnd = tail + shaft * Math.min(progress, 1);
   return [
@@ -64,20 +65,20 @@ export function straightPolygon(length: number, progress = 1): Pt[] {
 }
 
 /** Smallest growth at which the head tip has just left the origin square. */
-export function straightMinProgress(length: number): number {
-  const { headH, tail } = geom();
+export function straightMinProgress(length: number, scale = 1): number {
+  const { headH, tail } = geom(scale);
   return clamp01((length - SQUARE / 2 - tail) / (length - headH - tail));
 }
 
 /** L-shaped knight arrow; `progress` 0..1 grows it (the long leg first, then the turn). */
-export function knightPolygon(progress = 1): Pt[] {
-  const { halfBody: n, headH, headHalf, tail } = geom();
+export function knightPolygon(progress = 1, scale = 1): Pt[] {
+  const { halfBody: n, headH, headHalf, tail } = geom(scale);
   const shaftDistance = SQUARE * 2; // long leg: two squares
   const phase1 = shaftDistance - tail;
   const turn = SQUARE - n - headH; // short leg after the corner
   const total = phase1 + turn;
   const l = total * Math.min(progress, 1);
-  if (l <= phase1) return straightPolygon(tail + phase1 + headH, l / phase1);
+  if (l <= phase1) return straightPolygon(tail + phase1 + headH, l / phase1, scale);
   const tip = n + headH + (l - phase1);
   const h = tip - headH;
   const d = shaftDistance;
@@ -94,8 +95,8 @@ export function knightPolygon(progress = 1): Pt[] {
   ];
 }
 
-export function knightMinProgress(): number {
-  const { halfBody: n, headH, tail } = geom();
+export function knightMinProgress(scale = 1): number {
+  const { halfBody: n, headH, tail } = geom(scale);
   const phase1 = SQUARE * 2 - tail;
   const total = phase1 + (SQUARE - n - headH);
   return clamp01((phase1 + (SQUARE / 2 - n)) / total);
@@ -134,6 +135,8 @@ export interface ArrowSpec {
   /** CSS fill colour. */
   color: string;
   opacity: number;
+  /** Relative thickness, 1 = the original's arrow (e.g. to rank engine lines). */
+  width?: number;
   /** Grow in, then breathe. */
   animated?: boolean;
   /** Draw a gliding hand instead of an arrow. */
@@ -162,6 +165,7 @@ function build(doc: Document, spec: ArrowSpec): Built | null {
   poly.setAttribute('data-arrow', `${spec.from}${spec.to}`);
   poly.setAttribute('class', 'arrow');
   if (spec.animated) poly.setAttribute('data-animated', 'true');
+  const scale = spec.width && spec.width > 0 ? spec.width : 1;
   poly.style.fill = spec.color;
   poly.style.opacity = String(spec.opacity);
 
@@ -171,14 +175,14 @@ function build(doc: Document, spec: ArrowSpec): Built | null {
     let t = `rotate(${knightRotation(from, to, slope)} ${from.x} ${from.y})`;
     if (MIRRORED_SLOPES.includes(slope)) t += ` scale(-1, 1) translate(${-2 * from.x}, 0)`;
     poly.setAttribute('transform', t);
-    const draw = (p: number): void => poly.setAttribute('points', translate(knightPolygon(p), from));
+    const draw = (p: number): void => poly.setAttribute('points', translate(knightPolygon(p, scale), from));
     draw(spec.animated ? 0 : 1);
-    return { node: poly, draw, minProgress: knightMinProgress() };
+    return { node: poly, draw, minProgress: knightMinProgress(scale) };
   }
   poly.setAttribute('transform', `rotate(${straightRotation(from, to)} ${from.x} ${from.y})`);
-  const draw = (p: number): void => poly.setAttribute('points', translate(straightPolygon(length, p), from));
+  const draw = (p: number): void => poly.setAttribute('points', translate(straightPolygon(length, p, scale), from));
   draw(spec.animated ? 0 : 1);
-  return { node: poly, draw, minProgress: straightMinProgress(length) };
+  return { node: poly, draw, minProgress: straightMinProgress(length, scale) };
 }
 
 /** Shared clock for the "breathing" of animated arrows. */
@@ -305,7 +309,7 @@ export class Arrows {
     const keys = new Set(specs.map((s) => s.key));
     for (const key of [...this.items.keys()]) if (!keys.has(key)) this.drop(key);
     for (const spec of specs) {
-      const sig = `${spec.from}${spec.to}|${spec.color}|${spec.opacity}|${spec.animated ? 'a' : ''}${spec.pointerFinger ? 'f' : ''}`;
+      const sig = `${spec.from}${spec.to}|${spec.color}|${spec.opacity}|${spec.width ?? 1}|${spec.animated ? 'a' : ''}${spec.pointerFinger ? 'f' : ''}`;
       const prev = this.items.get(spec.key);
       if (prev && prev.sig === sig) continue;
       this.drop(spec.key);

@@ -33,6 +33,8 @@ export interface ArrowMarking {
   modifier: KeyModifier;
   color?: string;
   opacity?: number;
+  /** Relative thickness, 1 = default. */
+  width?: number;
   persistent: boolean;
   /** Grow in and breathe instead of appearing at once. */
   animated?: boolean;
@@ -44,7 +46,7 @@ export type Marking = HighlightMarking | ArrowMarking;
 
 export type MarkingInput =
   | { kind: 'highlight'; square: Square; modifier?: KeyModifier; color?: string; opacity?: number; persistent?: boolean }
-  | { kind: 'arrow'; from: Square; to: Square; modifier?: KeyModifier; color?: string; opacity?: number; persistent?: boolean; animated?: boolean; pointerFinger?: boolean };
+  | { kind: 'arrow'; from: Square; to: Square; modifier?: KeyModifier; color?: string; opacity?: number; width?: number; persistent?: boolean; animated?: boolean; pointerFinger?: boolean };
 
 export interface MarkingsDelta {
   added: Marking[];
@@ -56,7 +58,9 @@ const sameData = (a: Marking, b: Marking): boolean =>
   a.color === b.color &&
   a.opacity === b.opacity &&
   a.persistent === b.persistent &&
-  (a.kind === 'arrow' && b.kind === 'arrow' ? a.animated === b.animated && a.pointerFinger === b.pointerFinger : true);
+  (a.kind === 'arrow' && b.kind === 'arrow'
+    ? a.animated === b.animated && a.pointerFinger === b.pointerFinger && a.width === b.width
+    : true);
 
 export function buildMarking(input: MarkingInput): Marking {
   const modifier = input.modifier ?? 'none';
@@ -80,6 +84,7 @@ export function buildMarking(input: MarkingInput): Marking {
     modifier,
     color: input.color,
     opacity: input.opacity,
+    width: input.width,
     persistent,
     animated: input.animated,
     pointerFinger: input.pointerFinger,

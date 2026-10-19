@@ -1471,6 +1471,7 @@ export class ChessBoard {
           to: mk.to,
           color: mk.color ?? o.arrowColors[mk.modifier],
           opacity: mk.opacity ?? o.analysisHighlightOpacity,
+          width: mk.width,
           animated: mk.animated,
           pointerFinger: mk.pointerFinger,
         });

@@ -98,6 +98,29 @@ describe('arrow geometry with growth progress', () => {
   });
 });
 
+describe('arrow width', () => {
+  it('scales the shaft and the head; 1 (or none) is the original arrow', () => {
+    const base = straightPolygon(37.5, 1);
+    expect(straightPolygon(37.5, 1, 1)).toEqual(base);
+    const wide = straightPolygon(37.5, 1, 2);
+    expect(wide[0][0]).toBeCloseTo(base[0][0] * 2); // half shaft width
+    expect(wide[2][0]).toBeCloseTo(base[2][0] * 2); // half head width
+    // the tip still ends at the same place
+    expect(wide[3][1]).toBeCloseTo(base[3][1]);
+  });
+
+  it('a marking keeps its width, and a different width redraws the arrow', () => {
+    h = setup({ playingAs: null });
+    h.board.markings.add({ kind: 'arrow', from: 'e2', to: 'e4', width: 1.5 });
+    const first = h.board.el.querySelector('polygon[data-arrow="e2e4"]');
+    expect(first).not.toBeNull();
+    h.board.markings.add({ kind: 'arrow', from: 'e2', to: 'e4', width: 0.6 });
+    const second = h.board.el.querySelector('polygon[data-arrow="e2e4"]');
+    expect(second).not.toBe(first);
+    expect(second!.getAttribute('points')).not.toBe(first!.getAttribute('points'));
+  });
+});
+
 describe('animated arrows', () => {
   it('grow in over 400 ms (opacity ramps up) and then breathe on a 1.4 s cycle', () => {
     h = setup({ userMarkings: { animated: true } });
