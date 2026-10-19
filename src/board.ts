@@ -1422,7 +1422,11 @@ export class ChessBoard {
     }
     specs.push(...premoveSpecs);
     if (o.allowMarkings) {
-      for (const mk of this.markings.all()) {
+      // The user's own highlights (keyed by square) before those a page drew
+      // under keys of its own: on a shared square the user's shows.
+      const highlights = this.markings.all().filter((mk) => mk.kind === 'highlight');
+      const isUsers = (mk: Marking) => mk.key === `highlight|${(mk as { square: string }).square}`;
+      for (const mk of [...highlights.filter(isUsers), ...highlights.filter((mk) => !isUsers(mk))]) {
         if (mk.kind !== 'highlight') continue;
         specs.push({
           key: mk.key,

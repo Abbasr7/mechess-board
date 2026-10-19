@@ -44,9 +44,16 @@ export interface ArrowMarking {
 
 export type Marking = HighlightMarking | ArrowMarking;
 
+/**
+ * `key`: a key of the caller's own instead of `type|square` / `type|fromto`.
+ * A page drawing its own markings (engine arrows, tints) gives them their own
+ * keys, so they live beside the user's markings on the same squares: the
+ * user's right-clicks neither replace nor remove them, and two arrows between
+ * the same squares can both be shown.
+ */
 export type MarkingInput =
-  | { kind: 'highlight'; square: Square; modifier?: KeyModifier; color?: string; opacity?: number; persistent?: boolean }
-  | { kind: 'arrow'; from: Square; to: Square; modifier?: KeyModifier; color?: string; opacity?: number; width?: number; persistent?: boolean; animated?: boolean; pointerFinger?: boolean };
+  | { kind: 'highlight'; key?: string; square: Square; modifier?: KeyModifier; color?: string; opacity?: number; persistent?: boolean }
+  | { kind: 'arrow'; key?: string; from: Square; to: Square; modifier?: KeyModifier; color?: string; opacity?: number; width?: number; persistent?: boolean; animated?: boolean; pointerFinger?: boolean };
 
 export interface MarkingsDelta {
   added: Marking[];
@@ -68,7 +75,7 @@ export function buildMarking(input: MarkingInput): Marking {
   if (input.kind === 'highlight') {
     return {
       kind: 'highlight',
-      key: `highlight|${input.square}`,
+      key: input.key ?? `highlight|${input.square}`,
       square: input.square,
       modifier,
       color: input.color,
@@ -78,7 +85,7 @@ export function buildMarking(input: MarkingInput): Marking {
   }
   return {
     kind: 'arrow',
-    key: `arrow|${input.from}${input.to}`,
+    key: input.key ?? `arrow|${input.from}${input.to}`,
     from: input.from,
     to: input.to,
     modifier,

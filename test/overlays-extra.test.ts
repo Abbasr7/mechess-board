@@ -164,6 +164,31 @@ describe('animated arrows', () => {
     vi.useRealTimers();
   });
 
+  it('markings with keys of their own live beside the user markings on the same squares', () => {
+    h = setup({ playingAs: null });
+    h.board.markings.add({ kind: 'arrow', key: 'page|a', from: 'a1', to: 'a5', color: '#0000ff', persistent: true });
+    h.board.markings.add({ kind: 'arrow', key: 'page|b', from: 'a1', to: 'a5', color: '#ff0000', persistent: true });
+    expect(h.board.el.querySelectorAll('.arrows polygon').length).toBe(2);
+    // the user draws the same arrow: added beside them, not toggling them away
+    h.rightDrag('a1', 'a5');
+    expect(h.board.el.querySelectorAll('.arrows polygon').length).toBe(3);
+    // a click clears the user's arrow only
+    h.click('d4');
+    expect(h.board.el.querySelectorAll('.arrows polygon').length).toBe(2);
+    expect(h.board.markings.get('page|a')).toMatchObject({ from: 'a1', to: 'a5' });
+  });
+
+  it('on a shared square the user highlight shows over one a page drew under its own key', () => {
+    h = setup({ playingAs: null });
+    h.board.markings.add({ kind: 'highlight', key: 'page|e4', square: 'e4', color: '#0000ff', persistent: true });
+    h.rightDrag('e4', 'e4');
+    const e4 = h.board.el.querySelector('.highlight.square-54') as HTMLElement;
+    expect(e4.style.backgroundColor).not.toBe('rgb(0, 0, 255)');
+    // the user takes theirs away: the page's is back
+    h.rightDrag('e4', 'e4');
+    expect((h.board.el.querySelector('.highlight.square-54') as HTMLElement).style.backgroundColor).toBe('rgb(0, 0, 255)');
+  });
+
   it('persistent user markings survive board clicks', () => {
     h = setup({ userMarkings: { persistent: true } });
     h.rightDrag('a1', 'a5');
