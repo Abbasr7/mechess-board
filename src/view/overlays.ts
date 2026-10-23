@@ -99,7 +99,7 @@ export class Highlights {
       const { el } = v;
       if (spec.growing) {
         el.classList.add('growing-circle');
-        el.style.backgroundColor = '';
+        el.style.backgroundColor = 'transparent';
         el.style.opacity = '';
         el.style.setProperty('--background-color', spec.color ?? '#ffff33');
         el.style.setProperty('--opacity', String(spec.opacity));
